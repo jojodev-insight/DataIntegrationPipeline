@@ -20,7 +20,7 @@ class TestDocumentParser:
         """Test parser initialization."""
         parser = DocumentParser()
         assert parser is not None
-        assert len(parser._parsers) == 4  # PDF and DOCX parsers
+        assert len(parser._parsers) == 4  # PDF, DOCX, Excel, and CSV parsers
 
     def test_init_with_config(self):
         """Test parser initialization with config."""
@@ -40,11 +40,26 @@ class TestDocumentParser:
         assert parser.supports_file("test.docx") is True
         assert parser.supports_file("test.DOCX") is True
 
+    def test_supports_file_excel(self):
+        """Test file support detection for Excel."""
+        parser = DocumentParser()
+        assert parser.supports_file("test.xlsx") is True
+        assert parser.supports_file("test.xls") is True
+        assert parser.supports_file("test.xlsm") is True
+        assert parser.supports_file("test.XLSX") is True
+
+    def test_supports_file_csv(self):
+        """Test file support detection for CSV."""
+        parser = DocumentParser()
+        assert parser.supports_file("test.csv") is True
+        assert parser.supports_file("test.CSV") is True
+
     def test_supports_file_unsupported(self):
         """Test file support detection for unsupported types."""
         parser = DocumentParser()
         assert parser.supports_file("test.txt") is False
-        assert parser.supports_file("test.xlsx") is False
+        assert parser.supports_file("test.pptx") is False
+        assert parser.supports_file("test.doc") is False
 
     def test_get_supported_extensions(self):
         """Test getting supported extensions."""
@@ -52,6 +67,11 @@ class TestDocumentParser:
         extensions = parser.get_supported_extensions()
         assert ".pdf" in extensions
         assert ".docx" in extensions
+        assert ".xlsx" in extensions
+        assert ".xls" in extensions
+        assert ".csv" in extensions
+        # Should contain all 5 supported extensions
+        assert len(extensions) >= 5
 
     def test_parse_file_not_found(self):
         """Test parsing non-existent file."""

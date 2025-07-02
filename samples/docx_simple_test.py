@@ -8,10 +8,10 @@ sys.path.insert(0, str(project_root))
 from document_parser import DocumentParser
 
 # Initialize parser
-parser = DocumentParser({"template_dir": "../sample_files"})
+parser = DocumentParser({"template_dir": "sample_files"})
 
 # Parse DOCX and render template
-docx_path = "../sample_files/sample-document.docx"
+docx_path = "sample_files/sample-docx-file.docx"
 result = parser.render_data_file_to_template(
     docx_path,
     "document_summary.j2",

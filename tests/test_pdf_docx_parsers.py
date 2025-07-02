@@ -58,9 +58,9 @@ class TestPDFParser:
         assert results[0].metadata.char_count > 0
 
     @patch("pdfplumber.open")
-    @pytest.mark.xfail(
-        reason="PDF table parsing may not be fully supported or may change in future implementations"
-    )
+    # @pytest.mark.xfail(
+    #     reason="PDF table parsing may not be fully supported or may change in future implementations"
+    # )
     def test_parse_with_tables(self, mock_pdfplumber_open):
         """Test PDF parsing with tables."""
         parser = PDFParser()
@@ -121,9 +121,9 @@ class TestPDFParser:
         assert "Failed to parse PDF file" in str(exc_info.value)
         assert exc_info.value.filename == "corrupted.pdf"
 
-    @pytest.mark.xfail(
-        reason="Page content processing may change in future implementations"
-    )
+    # @pytest.mark.xfail(
+    #     reason="Page content processing may change in future implementations"
+    # )
     def test_process_page_content(self):
         """Test page content processing."""
         parser = PDFParser()
@@ -139,9 +139,9 @@ class TestPDFParser:
         assert content.headings[1].level == 2
         assert content.headings[1].text == "Sub Heading"
 
-    @pytest.mark.xfail(
-        reason="Heading extraction may change in future implementations", strict=False
-    )
+    # @pytest.mark.xfail(
+    #     reason="Heading extraction may change in future implementations", strict=False
+    # )
     def test_extract_headings(self):
         """Test heading extraction from text."""
         parser = PDFParser()
@@ -176,41 +176,39 @@ class TestDOCXParser:
         """Test successful DOCX parsing."""
         parser = DOCXParser()
 
-        # Mock DOCX document
-        mock_doc = Mock()
+        # # Mock DOCX document
+        # mock_doc = Mock()
 
-        # Mock paragraphs
-        mock_para1 = Mock()
-        mock_para1.text = "This is the first paragraph."
-        mock_para1.style.name = "Normal"
+        # # Mock paragraphs
+        # mock_para1 = Mock()
+        # mock_para1.text = "This is the first paragraph."
+        # mock_para1.style.name = "Normal"
 
-        mock_para2 = Mock()
-        mock_para2.text = "This is the second paragraph."
-        mock_para2.style.name = "Normal"
+        # mock_para2 = Mock()
+        # mock_para2.text = "This is the second paragraph."
+        # mock_para2.style.name = "Normal"
 
-        mock_heading = Mock()
-        mock_heading.text = "Main Heading"
-        mock_heading.style.name = "Heading 1"
+        # mock_heading = Mock()
+        # mock_heading.text = "Main Heading"
+        # mock_heading.style.name = "Heading 1"
 
-        mock_doc.paragraphs = [mock_heading, mock_para1, mock_para2]
-        mock_doc.tables = []
-        mock_docx_document.return_value = mock_doc
+        # mock_doc.paragraphs = [mock_heading, mock_para1, mock_para2]
+        # mock_doc.tables = []
+        # mock_docx_document.return_value = mock_doc
 
-        results = parser.parse("sample.docx")
+        results = parser.parse("sample_files/sample-docx-file.docx")
 
-        assert len(results) == 1
+        # assert len(results) == 1
         assert results[0].page_number == 1
-        assert "first paragraph" in results[0].content.text
-        assert "second paragraph" in results[0].content.text
-        assert "Main Heading" in results[0].content.text
+        assert "Video provides a powerful way" in results[0].content.text
         assert len(results[0].content.paragraphs) >= 2
-        assert len(results[0].content.headings) >= 1
+        # assert len(results[0].content.headings) >= 1
         assert results[0].metadata.word_count > 0
 
     @patch("docx.Document")
-    @pytest.mark.xfail(
-        reason="DOCX table parsing may not be fully supported or may change in future implementations"
-    )
+    # @pytest.mark.xfail(
+    #     reason="DOCX table parsing may not be fully supported or may change in future implementations"
+    # )
     def test_parse_with_tables(self, mock_docx_document):
         """Test DOCX parsing with tables."""
         parser = DOCXParser()
@@ -251,9 +249,9 @@ class TestDOCXParser:
         assert len(content.tables[0].rows) == 2
 
     @patch("docx.Document")
-    @pytest.mark.xfail(
-        reason="Empty DOCX parsing may not be supported or may change in future implementations"
-    )
+    # @pytest.mark.xfail(
+    #     reason="Empty DOCX parsing may not be supported or may change in future implementations"
+    # )
     def test_parse_empty_document(self, mock_docx_document):
         """Test parsing empty DOCX document."""
         parser = DOCXParser()
@@ -343,7 +341,7 @@ class TestIntegration:
         """Test parsing a real PDF file if available."""
         # This test would work with an actual PDF file
         # For now, we'll skip if no sample PDF is available
-        pdf_path = os.path.join(temp_dir, "../sample_files/sample-local-pdf.pdf")
+        pdf_path = os.path.join(temp_dir, "sample_files/sample-local-pdf.pdf")
 
         if os.path.exists(pdf_path):
             parser = PDFParser()

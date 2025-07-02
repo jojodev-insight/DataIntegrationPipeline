@@ -8,10 +8,10 @@ sys.path.insert(0, str(project_root))
 from document_parser import DocumentParser
 
 # Initialize parser
-parser = DocumentParser({"template_dir": "../sample_files"})
+parser = DocumentParser({"template_dir": "sample_files"})
 
 # Parse Excel and render template
-excel_path = "../sample_files/sample-data.xlsx"
+excel_path = "sample_files/sample-xlsx-file.xlsx"
 result = parser.render_data_file_to_template(
     excel_path,
     "document_summary.j2",
