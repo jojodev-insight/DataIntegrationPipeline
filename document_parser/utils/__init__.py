@@ -15,7 +15,7 @@ from .templates import TemplateProcessor, TEMPLATE_EXAMPLES
 
 __all__ = [
     "DocumentParsingError",
-    "UnsupportedFileTypeError", 
+    "UnsupportedFileTypeError",
     "CorruptedFileError",
     "PasswordProtectedError",
     "FileNotFoundError",

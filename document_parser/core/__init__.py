@@ -2,11 +2,18 @@
 Core package initialization.
 """
 
-from .models import DocumentResult, PageContent, DocumentInfo, PageResult, HeadingInfo, PageMetadata
+from .models import (
+    DocumentResult,
+    PageContent,
+    DocumentInfo,
+    PageResult,
+    HeadingInfo,
+    PageMetadata,
+)
 
 __all__ = [
     "DocumentResult",
-    "PageContent", 
+    "PageContent",
     "DocumentInfo",
     "PageResult",
     "HeadingInfo",
