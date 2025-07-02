@@ -4,7 +4,7 @@ Data models for document parsing results.
 
 from datetime import datetime
 from typing import List, Dict, Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 import json
 
 
@@ -17,16 +17,43 @@ class HeadingInfo:
 
 
 @dataclass
+class TableCell:
+    """A single cell in a table."""
+
+    text: str
+
+
+@dataclass
+class TableRow:
+    """A row in a table."""
+
+    cells: List[TableCell]
+
+
+@dataclass
+class TableContent:
+    """A table within document content."""
+
+    rows: List[TableRow]
+
+
+@dataclass
 class PageContent:
     """Content extracted from a single page."""
 
     text: str
     paragraphs: List[str]
     headings: List[HeadingInfo]
+    tables: List[TableContent] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
-        return asdict(self)
+        return {
+            "text": self.text,
+            "paragraphs": self.paragraphs,
+            "headings": [asdict(heading) for heading in self.headings],
+            "tables": [asdict(table) for table in self.tables],
+        }
 
 
 @dataclass

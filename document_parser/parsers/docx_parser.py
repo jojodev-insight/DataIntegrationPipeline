@@ -184,3 +184,55 @@ class DOCXParser(BaseParser):
         )
 
         return PageResult(page_number=page_num, content=content, metadata=metadata)
+
+    def _process_table(self, table) -> Any:
+        """
+        Process a DOCX table and convert it to structured format.
+
+        Args:
+            table: DOCX table object
+
+        Returns:
+            Table content object with rows and cells
+        """
+        from ..core.models import TableContent, TableRow, TableCell
+
+        rows = []
+        for row in table.rows:
+            cells = []
+            for cell in row.cells:
+                table_cell = TableCell(text=cell.text.strip())
+                cells.append(table_cell)
+            table_row = TableRow(cells=cells)
+            rows.append(table_row)
+
+        return TableContent(rows=rows)
+
+    def _extract_headings_from_paragraphs(self, paragraphs) -> List[HeadingInfo]:
+        """
+        Extract headings from DOCX paragraphs based on their styles.
+
+        Args:
+            paragraphs: List of DOCX paragraph objects
+
+        Returns:
+            List of HeadingInfo objects
+        """
+        headings = []
+
+        for paragraph in paragraphs:
+            style_name = paragraph.style.name
+
+            # Check if paragraph is a heading style
+            if style_name.startswith("Heading"):
+                try:
+                    # Extract heading level from style name (e.g., "Heading 1" -> 1)
+                    level = int(style_name.split()[-1])
+                    heading = HeadingInfo(level=level, text=paragraph.text.strip())
+                    headings.append(heading)
+                except (ValueError, IndexError):
+                    # If we can't parse the level, treat as level 1
+                    heading = HeadingInfo(level=1, text=paragraph.text.strip())
+                    headings.append(heading)
+
+        return headings

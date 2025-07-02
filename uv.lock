@@ -257,7 +257,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = "==2.9.0.post0" },
     { name = "python-docx", specifier = "==1.2.0" },
     { name = "pytz", specifier = "==2025.2" },
-    { name = "ruff", specifier = ">=0.12.1" },
+    { name = "ruff", specifier = "==0.12.1" },
     { name = "six", specifier = "==1.17.0" },
     { name = "typing-extensions", specifier = "==4.14.0" },
     { name = "typing-inspection", specifier = "==0.4.1" },

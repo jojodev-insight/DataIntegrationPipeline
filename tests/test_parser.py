@@ -119,3 +119,125 @@ class TestDocumentParser:
         assert doc_info.total_pages == 5
         assert doc_info.file_size > 0
         assert doc_info.created_at is not None
+
+    def test_batch_processing_multiple_files(self, temp_dir):
+        """Test batch processing of multiple files."""
+        parser = DocumentParser()
+
+        # Create multiple test files
+        test_files = []
+        for i, ext in enumerate([".pdf", ".docx", ".csv", ".xlsx"], 1):
+            test_file = os.path.join(temp_dir, f"test{i}{ext}")
+            with open(test_file, "w") as f:
+                f.write(f"test content {i}")
+            test_files.append(test_file)
+
+        # Mock all parsers to return successful results
+        mock_page_result = Mock()
+        mock_page_result.page_number = 1
+        mock_page_result.content.text = "Mock content"
+        mock_page_result.metadata.word_count = 10
+
+        with patch.object(parser, "_get_parser_for_file") as mock_get_parser:
+            mock_parser = Mock()
+            mock_parser.parse.return_value = [mock_page_result]
+            mock_get_parser.return_value = mock_parser
+
+            results = parser.parse_files(test_files)
+
+            # Should have results for all files
+            assert len(results) == 4
+
+            # Check that each result has proper structure
+            for result in results:
+                assert result.document_info is not None
+                assert len(result.pages) > 0
+                assert result.pages[0].content.text == "Mock content"
+
+    def test_batch_processing_mixed_success_failure(self, temp_dir):
+        """Test batch processing with some files failing."""
+        parser = DocumentParser()
+
+        # Create test files
+        success_file = os.path.join(temp_dir, "success.pdf")
+        failure_file = os.path.join(temp_dir, "failure.pdf")
+        unsupported_file = os.path.join(temp_dir, "unsupported.txt")
+
+        with open(success_file, "w") as f:
+            f.write("success content")
+        with open(failure_file, "w") as f:
+            f.write("failure content")
+        with open(unsupported_file, "w") as f:
+            f.write("unsupported content")
+
+        test_files = [success_file, failure_file, unsupported_file]
+
+        # Mock parser behavior
+        mock_page_result = Mock()
+        mock_page_result.page_number = 1
+        mock_page_result.content.text = "Success content"
+        mock_page_result.metadata.word_count = 10
+
+        with patch.object(parser, "_get_parser_for_file") as mock_get_parser:
+
+            def parser_side_effect(file_path):
+                if "success" in file_path:
+                    mock_parser = Mock()
+                    mock_parser.parse.return_value = [mock_page_result]
+                    return mock_parser
+                elif "failure" in file_path:
+                    mock_parser = Mock()
+                    mock_parser.parse.side_effect = Exception("Parse error")
+                    return mock_parser
+                else:  # unsupported
+                    return None
+
+            mock_get_parser.side_effect = parser_side_effect
+
+            results = parser.parse_files(test_files)
+
+            # Should only have successful results
+            assert len(results) == 1
+            assert results[0].document_info.filename == "success.pdf"
+
+    def test_batch_processing_empty_list(self):
+        """Test batch processing with empty file list."""
+        parser = DocumentParser()
+
+        results = parser.parse_files([])
+
+        assert len(results) == 0
+        assert isinstance(results, list)
+
+    def test_batch_processing_nonexistent_files(self):
+        """Test batch processing with non-existent files."""
+        parser = DocumentParser()
+
+        nonexistent_files = ["nonexistent1.pdf", "nonexistent2.docx"]
+        results = parser.parse_files(nonexistent_files)
+
+        # Should return empty list as files don't exist
+        assert len(results) == 0
+
+    @patch("document_parser.core.parser.logger")
+    def test_batch_processing_logs_errors(self, mock_logger, temp_dir):
+        """Test that batch processing logs errors appropriately."""
+        parser = DocumentParser()
+
+        # Create a file that will cause parsing to fail
+        failing_file = os.path.join(temp_dir, "failing.pdf")
+        with open(failing_file, "w") as f:
+            f.write("content that will fail")
+
+        with patch.object(parser, "_get_parser_for_file") as mock_get_parser:
+            mock_parser = Mock()
+            mock_parser.parse.side_effect = Exception("Parsing failed")
+            mock_get_parser.return_value = mock_parser
+
+            results = parser.parse_files([failing_file])
+
+            # Should log the error
+            mock_logger.error.assert_called()
+            error_call_args = mock_logger.error.call_args[0][0]
+            assert "Failed to parse" in error_call_args
+            assert "failing.pdf" in error_call_args

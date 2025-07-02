@@ -61,16 +61,20 @@ from document_parser import DocumentParser
 parser = DocumentParser({'template_dir': 'sample_files'})
 
 # Parse a PDF file
-result = parser.parse_file("document.pdf")
+result = parser.parse_file("sample_files/sample-local-pdf.pdf")
 print(result.to_json(pretty=True))
 
 # Parse an Excel file
-result = parser.parse_file("spreadsheet.xlsx")
+result = parser.parse_file("sample_files/sample-data.xlsx")
 print(f"Sheets: {result.document_info.total_pages}")
 
 # Parse a CSV file  
-result = parser.parse_file("data.csv")
+result = parser.parse_file("sample_files/customers-100.csv")
 print(result.to_json(pretty=True))
+
+# Parse a DOCX file
+result = parser.parse_file("sample_files/sample-document.docx")
+print(f"Pages: {result.document_info.total_pages}")
 
 # Render parsed data with templates
 # Method 1: Render with template string
@@ -82,13 +86,20 @@ print(rendered)
 rendered = parser.render_template_file("document_summary.j2", result)
 print(rendered)
 
-# Method 3: Parse and render in one step
-rendered = parser.render_data_file_to_template(
-    "document.pdf", 
+# Method 3: Parse and render in one step (recommended)
+csv_report = parser.render_data_file_to_template(
+    "sample_files/customers-100.csv", 
+    "csv_report.j2",
+    extra_context={'processing_date': '2025-07-02'}
+)
+print(csv_report)
+
+pdf_summary = parser.render_data_file_to_template(
+    "sample_files/sample-local-pdf.pdf",
     "document_summary.j2",
     extra_context={'processing_date': '2025-07-02'}
 )
-print(rendered)
+print(pdf_summary)
 
 # Method 4: Simple template rendering (no document parsing)
 simple_result = parser.render_simple_template_file(
@@ -205,6 +216,65 @@ When rendering document templates, the following variables are available:
 {{ pages[0].content.text.split('\n')[:5] | join('\n') if pages }}
 ```
 ```
+```
+
+## Sample Files and Templates
+
+### Available Sample Scripts
+
+The `samples/` directory contains simple, focused examples for each file type:
+
+| Script | File Type | Sample File Required | Template Used |
+|--------|-----------|---------------------|---------------|
+| `csv_simple_test.py` | CSV | `customers-100.csv` | `csv_report.j2` |
+| `pdf_simple_test.py` | PDF | `sample-local-pdf.pdf` | `document_summary.j2` |
+| `excel_simple_test.py` | Excel | `sample-data.xlsx` | `document_summary.j2` |
+| `docx_simple_test.py` | DOCX | `sample-document.docx` | `document_summary.j2` |
+
+### Available Templates
+
+The `sample_files/` directory includes several pre-built Jinja2 templates:
+
+| Template | Purpose | Best For |
+|----------|---------|----------|
+| `document_summary.j2` | General document summary | PDF, DOCX, Excel files |
+| `csv_report.j2` | Detailed CSV analysis | CSV files with data statistics |
+| `csv_custom_report.j2` | Custom CSV report | CSV files with custom formatting |
+| `document_content.j2` | Simple content display | Any file type |
+| `simple_template.j2` | Basic text template | Simple text rendering |
+| `title_message.j2` | Title and message | Basic notifications |
+
+### Adding Your Own Sample Files
+
+To use the sample scripts, add these files to the `sample_files/` directory:
+
+1. **CSV File**: Any CSV with headers (e.g., `customers-100.csv`)
+2. **PDF File**: Any readable PDF document (e.g., `sample-local-pdf.pdf`)
+3. **Excel File**: Any .xlsx or .xls file (e.g., `sample-data.xlsx`)
+4. **DOCX File**: Any Word document (e.g., `sample-document.docx`)
+
+### Creating Custom Templates
+
+Templates use standard Jinja2 syntax with access to document data:
+
+```jinja2
+# Custom Report: {{ document_info.filename }}
+
+## File Information
+- **Type**: {{ document_info.file_type | upper }}
+- **Size**: {{ "%.2f KB" | format(document_info.file_size / 1024) }}
+- **Pages/Sheets**: {{ document_info.total_pages }}
+
+## Content Summary
+{% if pages %}
+{% for page in pages[:3] %}
+### Page {{ page.page_number }}
+{{ page.content.text[:200] }}...
+{% endfor %}
+{% endif %}
+
+*Generated on {{ processing_date }}*
+```
 
 ## Development
 
@@ -250,14 +320,27 @@ DataIntegrationPipeline/
 │       └── templates.py     # Jinja2 template processing
 ├── sample_files/
 │   ├── *.j2                 # Jinja2 template files
+│   │   ├── document_summary.j2    # General document summary
+│   │   ├── csv_report.j2          # CSV-specific report
+│   │   ├── csv_custom_report.j2   # Custom CSV report
+│   │   ├── document_content.j2    # Document content template
+│   │   ├── simple_template.j2     # Simple text template
+│   │   └── title_message.j2       # Title/message template
 │   ├── sample-local-pdf.pdf # Sample PDF for testing
-│   └── customers-100.csv    # Sample CSV for testing
+│   ├── customers-100.csv    # Sample CSV for testing
+│   ├── sample-data.xlsx     # Sample Excel for testing (add your own)
+│   └── sample-document.docx # Sample DOCX for testing (add your own)
+├── samples/                 # Simple example scripts
+│   ├── csv_simple_test.py   # CSV parsing example
+│   ├── pdf_simple_test.py   # PDF parsing example
+│   ├── excel_simple_test.py # Excel parsing example
+│   └── docx_simple_test.py  # DOCX parsing example
 ├── output/                  # Generated reports and outputs
 ├── tests/
 │   ├── conftest.py
 │   ├── test_*.py           # Comprehensive test suite
-├── csv_simple_test.py      # Simple CSV parsing example
-├── pdf_simple_test.py      # Simple PDF parsing example
+│   ├── test_pdf_docx_parsers.py    # PDF and DOCX parser tests
+│   └── test_excel_csv_parsers.py   # Excel and CSV parser tests
 ├── parsing_test.py         # Comprehensive parsing examples
 ├── requirements.txt
 ├── pyproject.toml
@@ -266,17 +349,59 @@ DataIntegrationPipeline/
 
 ### Quick Start Examples
 
-For quick testing, use the simple example files:
+The project includes simple example files in the `samples/` folder for immediate testing:
 
 ```bash
+cd samples
+
 # Test CSV parsing with template rendering
 python csv_simple_test.py
 
 # Test PDF parsing with template rendering  
 python pdf_simple_test.py
 
-# Run comprehensive parsing tests
+# Test Excel parsing with template rendering
+python excel_simple_test.py
+
+# Test DOCX parsing with template rendering
+python docx_simple_test.py
+```
+
+For comprehensive testing and examples:
+```bash
+# Run comprehensive parsing tests with all file types
 python parsing_test.py
+```
+
+#### Sample Files Required
+
+Place the following sample files in the `sample_files/` directory:
+
+- **CSV**: `customers-100.csv` (customer data)
+- **PDF**: `sample-local-pdf.pdf` (any PDF document)
+- **Excel**: `sample-data.xlsx` (spreadsheet with data)
+- **DOCX**: `sample-document.docx` (Word document)
+
+#### Example Usage Pattern
+
+Each simple test follows the same pattern:
+```python
+from document_parser import DocumentParser
+
+# Initialize parser with template directory
+parser = DocumentParser({"template_dir": "../sample_files"})
+
+# Parse file and render with template in one step
+result = parser.render_data_file_to_template(
+    file_path,
+    "document_summary.j2",
+    extra_context={
+        "processing_date": "2025-07-02",
+        "parser_version": "1.0.0"
+    }
+)
+
+print(result)
 ```
 
 ## License
