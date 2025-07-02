@@ -17,21 +17,150 @@ your Jinja template files.
 
 ## Installation
 
+> **💡 Pro Tip**: We recommend using [UV](https://github.com/astral-sh/uv) for faster dependency management and automatic virtual environment handling. UV is 10-100x faster than pip and automatically manages virtual environments.
+
+### Method 1: Using UV (Recommended - Fast & Modern)
+
+[UV](https://github.com/astral-sh/uv) is a fast Python package installer and dependency resolver with automatic virtual environment management. Install it first:
+
+```bash
+# Install uv (choose your method)
+curl -LsSf https://astral.sh/uv/install.sh | sh  # Unix/macOS
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows PowerShell
+pip install uv  # Alternative: install via pip
+```
+
+Then install the Document Parser:
+
+```bash
+# Install directly from git repository (creates virtual env automatically)
+uv add git+https://github.com/yourusername/DataIntegrationPipeline.git
+
+# Install from specific branch
+uv add git+https://github.com/yourusername/DataIntegrationPipeline.git@main
+
+# For development: clone and install in editable mode
+git clone <repository-url>
+cd DataIntegrationPipeline
+uv sync  # Creates venv and installs all dependencies from pyproject.toml/uv.lock
+uv add -e .  # Install in editable mode
+
+# Run scripts directly with uv (no need to activate virtual env)
+uv run python samples/csv_simple_test.py
+uv run python -m document_parser parse file.pdf
+```
+
+### Method 2: Using UV for Local Development (Recommended)
+
+UV automatically manages virtual environments and dependencies, making development setup effortless:
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd DataIntegrationPipeline
 ```
 
-2. Create a virtual environment:
+2. Use UV to manage dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Sync dependencies (creates virtual environment automatically from pyproject.toml)
+uv sync
+
+# Or manually create venv and install (if needed)
+uv venv
+uv pip install -e .
+
+# UV automatically uses the virtual environment for all commands
+# No need to manually activate the environment!
 ```
 
-3. Install dependencies:
+3. Run commands with UV (automatic virtual environment activation):
 ```bash
+# Run scripts directly with uv (virtual env activated automatically)
+uv run python samples/csv_simple_test.py
+uv run python -m document_parser parse file.pdf
+uv run pytest  # Run tests
+
+# Or manually activate venv if needed for other tools
+# On Windows: .venv\Scripts\activate
+# On Unix/macOS: source .venv/bin/activate
+```
+
+### Method 3: Traditional pip Installation
+
+```bash
+# Install directly from git repository
+pip install git+https://github.com/jojodev-insight/DataIntegrationPipeline.git
+
+# Install from specific branch
+pip install git+https://github.com/jojodev-insight/DataIntegrationPipeline.git@master
+
+# For local development
+git clone <repository-url>
+cd DataIntegrationPipeline
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e .
+```
+
+### Method 4: Add to pyproject.toml/requirements.txt
+
+**For UV users (recommended):**
+
+Add to your project's `pyproject.toml`:
+```toml
+[project]
+dependencies = [
+    "document-parser @ git+https://github.com/yourusername/DataIntegrationPipeline.git"
+]
+
+# Or for development dependencies
+[tool.uv]
+dev-dependencies = [
+    "document-parser @ git+https://github.com/yourusername/DataIntegrationPipeline.git"
+]
+
+# For local development
+[tool.uv]
+dev-dependencies = [
+    "document-parser @ file:///path/to/DataIntegrationPipeline"
+]
+```
+
+**For traditional pip users:**
+
+Add to your project's `pyproject.toml`:
+```toml
+[project]
+dependencies = [
+    "document-parser @ git+https://github.com/yourusername/DataIntegrationPipeline.git"
+]
+```
+
+Or add to `requirements.txt`:
+```txt
+# Install from git repository
+git+https://github.com/yourusername/DataIntegrationPipeline.git
+
+# Or for local development
+-e /path/to/DataIntegrationPipeline
+```
+
+Then install:
+```bash
+# With uv (recommended - automatically manages virtual environment)
+uv sync
+
+# With pip (manual virtual environment management)
 pip install -r requirements.txt
+```
+
+### Verification
+
+Test the installation:
+```python
+from document_parser import DocumentParser
+parser = DocumentParser()
+print("✅ Document Parser installed successfully!")
 ```
 
 ## Usage
@@ -281,12 +410,22 @@ Templates use standard Jinja2 syntax with access to document data:
 ### Running Tests
 
 ```bash
+# Using UV (recommended - automatic virtual environment)
+uv run pytest tests/ -v --cov=document_parser
+
+# Traditional method (activate virtual environment first)
 pytest tests/ -v --cov=document_parser
 ```
 
 ### Code Formatting
 
 ```bash
+# Using UV (recommended)
+uv run black document_parser/ tests/
+uv run flake8 document_parser/ tests/
+uv run mypy document_parser/
+
+# Traditional method (activate virtual environment first)
 black document_parser/ tests/
 flake8 document_parser/ tests/
 mypy document_parser/
@@ -352,12 +491,16 @@ DataIntegrationPipeline/
 The project includes simple example files in the `samples/` folder for immediate testing:
 
 ```bash
+# Using UV (recommended - no need to activate virtual environment)
+uv run python samples/csv_simple_test.py
+uv run python samples/pdf_simple_test.py
+uv run python samples/excel_simple_test.py
+uv run python samples/docx_simple_test.py
+uv run python samples/combined_test.py
+
+# Or traditional method (activate virtual environment first)
 cd samples
-
-# Test CSV parsing with template rendering
 python csv_simple_test.py
-
-# Test PDF parsing with template rendering  
 python pdf_simple_test.py
 
 # Test Excel parsing with template rendering
